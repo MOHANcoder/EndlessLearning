@@ -50,14 +50,14 @@
             text-align: center;
         }
 
-        .error-box{
+        .error-box {
             color: red;
         }
     </style>
 </head>
 
 <body>
-    <form action="index.php" method="post">
+    <form action="login.php" method="post">
         <h1>Login</h1>
         <div class="email">
             <label for="email">Email ID</label>
@@ -68,7 +68,7 @@
         <div class="pass">
             <label for="pass">Password</label>
             <br />
-            <input type="password" name="pass" id="pass" placeholder="your password" required/>
+            <input type="password" name="pass" id="pass" placeholder="your password" required />
             <div class="error-box"></div>
         </div>
         <div class="submit">
@@ -84,10 +84,49 @@
 </html>
 
 <?php
+include("database.php");
+session_start();
+if (isset($_POST["login"])) {
+    // $username = filter_input(INPUT_POST,"name",FILTER_SANITIZE_SPECIAL_CHARS);
+    $useremail = filter_input(INPUT_POST, "email", FILTER_SANITIZE_EMAIL);
+    $password = filter_input(INPUT_POST, "pass");
 
-    if(isset($_POST["submit"])){
-        foreach($_POST as $key => $value){
-            echo "{$key} => {$value} <br/>";
-        }
+    $errors = array();
+
+    // if(empty($username)){
+    //    array_push($errors,"Invalid username");
+    // }
+
+    if (empty($useremail)) {
+        array_push($errors, "Invalid email");
     }
+
+    if (empty($password)) {
+        array_push($errors, "Invalid password");
+    }
+
+    if (count($errors) == 0) {
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $sql = "SELECT * FROM USER WHERE email = '$useremail'";
+        try {
+            $result = mysqli_query($conn, $sql);
+            if (mysqli_num_rows($result) == 1) {
+                $user_details = mysqli_fetch_assoc($result);
+                if(password_verify($password,$user_details["password"])){
+                    $_SESSION["user_id"] = $user_details["user_id"];
+                    $_SESSION["user_name"] = $user_details["username"];
+                    header("Location: ../index.php");
+                    exit();
+                }
+                
+            }else{
+                echo "Invalid credentials";
+            }
+        } catch (mysqli_sql_exception $e) {
+            echo "user not found";
+        }
+
+        mysqli_close($conn);
+    }
+}
 ?>

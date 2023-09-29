@@ -1,3 +1,7 @@
+<?php
+    include("database.php");
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,7 +13,7 @@
 </head>
 
 <body>
-    <form action="index.php" method="post">
+    <form action="signup.php" method="post">
         <h1>Sign Up</h1>
         <div class="name">
             <label for="name">Name</label>
@@ -43,9 +47,41 @@
 
 <?php
 
-    if(isset($_POST["submit"])){
-        foreach($_POST as $key => $value){
-            echo "{$key} => {$value} <br/>";
+    if(isset($_POST["signup"])){
+        $username = filter_input(INPUT_POST,"name",FILTER_SANITIZE_SPECIAL_CHARS);
+        $useremail = filter_input(INPUT_POST,"email",FILTER_SANITIZE_EMAIL);
+        $password = filter_input(INPUT_POST,"pass");
+
+        $errors = array();
+
+        if(empty($username)){
+           array_push($errors,"Invalid username");
+        }
+
+        if(empty($useremail)){
+            array_push($errors,"Invalid email");
+        }
+
+        if(empty($password)){
+            array_push($errors,"Invalid password");
+        }
+
+        if(count($errors) == 0){
+            $hashed_password = password_hash($password,PASSWORD_DEFAULT);
+
+            $sql = "INSERT INTO User (username,password,email) VALUES ('$username','$hashed_password','$useremail')";
+            try{
+                mysqli_query($conn,$sql);
+                $_SESSION["user_id"] = mysqli_insert_id($conn);
+                $_SESSION["user_name"] = $username;
+                header("Location: ../index.php");
+                exit();
+
+            }catch(mysqli_sql_exception $e){
+                echo "user not registered";
+            }
+
+            mysqli_close($conn);
         }
     }
 ?>
