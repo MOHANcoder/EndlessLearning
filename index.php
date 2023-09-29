@@ -1,3 +1,6 @@
+<?php
+    include("./pages/database.php");
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
